@@ -6,61 +6,35 @@ import re
 import octoprint.plugin
 
 
-class FixCBDFirmwarePlugin(octoprint.plugin.OctoPrintPlugin):
-
-    REGEX_XYZ0 = re.compile(r"(?P<axis>[XYZ])(?=[XYZ]|\s|$)")
-    REGEX_XYZE0 = re.compile(r"(?P<axis>[XYZE])(?=[XYZE]|\s|$)")
+class FixWaitFirmwarePlugin(octoprint.plugin.OctoPrintPlugin):
 
     def __init__(self):
         self._logged_replacement = {}
+        self.updateWait = False
 
     def initialize(self):
-        self._logger.info("Plugin active, working around broken 'CBD make it' firmware")
+        self._logger.info("Plugin active, working around broken 'Wait/Busy' firmware")
 
     def rewrite_sending(
         self, comm_instance, phase, cmd, cmd_type, gcode, subcode=None, *args, **kwargs
     ):
-        if gcode == "M110":
-            # firmware chokes on N parameters with M110, fix that
-            self._log_replacement(gcode, cmd, "M110")
-            return "M110"
-        elif gcode == "G28":
-            # firmware chokes on X, Y & probably Z parameter, rewrite to X0, Y0, Z0
-            rewritten = self.REGEX_XYZ0.sub(r"\g<axis>0 ", cmd).strip()
-            self._log_replacement(gcode, cmd, rewritten)
-            return rewritten
-        elif gcode in ["M18", "M84"]:
-            # firmware chokes on X, Y, Z and E parameter, rewrite to X0, Y0, Z0, E0
-            rewritten = self.REGEX_XYZE0.sub(r"\g<axis>0 ", cmd).strip()
-            self._log_replacement(gcode, cmd, rewritten)
-            return rewritten
+        """ hook """
+        if gcode == "G1": #go (may return a busy)
+            self.updateWait = True
+        if gcode == "M140" or gcode == "M104": #set temperature (beginning…)
+            self.updateWait = False
 
     def rewrite_received(self, comm_instance, line, *args, **kwargs):
+        """ hook """
         line = self._rewrite_wait_to_busy(line)
-        line = self._rewrite_identifier(line)
         return line
 
     def _rewrite_wait_to_busy(self, line):
-        # firmware wrongly assumes "wait" to mean "busy", fix that
-        if line == "wait" or line.startswith("wait"):
-            self._log_replacement("wait", "wait", "echo:busy processing", only_once=True)
-            return "echo:busy processing"
-        else:
-            return line
-
-    def _rewrite_identifier(self, line):
-        # change identifier to signal stuff is fixed so that printer safety no longer triggers
-        rewritten = None
-
-        if "CBD make it" in line:
-            rewritten = line.replace("CBD make it", "CBD made it, foosel fixed it")
-        elif "ZWLF make it" in line:
-            rewritten = line.replace("ZWLF make it", "ZWLF made it, foosel fixed it")
-
-        if rewritten:
-            self._log_replacement("identifier", line, rewritten)
-            return rewritten
-
+        if self.updateWait:
+            # firmware wrongly assumes "wait" to mean "busy", fix that
+            if line == "wait" or line.startswith("wait"):
+                self._log_replacement("wait", "wait", "echo:busy processing", only_once=False)
+                return "echo:busy processing"
         return line
 
     def _log_replacement(self, t, orig, repl, only_once=False):
@@ -86,12 +60,12 @@ class FixCBDFirmwarePlugin(octoprint.plugin.OctoPrintPlugin):
 
     def get_update_information(self):
         return {
-            "fixcbdfirmware": {
-                "displayName": "Fix CBD Firmware Plugin",
+            "fixwaitfirmware": {
+                "displayName": "Fix Wait Firmware Plugin",
                 "displayVersion": self._plugin_version,
                 "type": "github_release",
                 "user": "OctoPrint",
-                "repo": "OctoPrint-FixCBDFirmware",
+                "repo": "OctoPrint-FixWaitFirmware",
                 "current": self._plugin_version,
                 "stable_branch": {
                     "name": "Stable",
@@ -105,18 +79,18 @@ class FixCBDFirmwarePlugin(octoprint.plugin.OctoPrintPlugin):
                         "commitish": ["devel", "master"],
                     }
                 ],
-                "pip": "https://github.com/OctoPrint/OctoPrint-FixCBDFirmware/archive/{target_version}.zip",
+                "pip": "https://github.com/mbriday/OctoPrint-FixWaitFirmware/archive/{target_version}.zip",
             }
         }
 
 
-__plugin_name__ = "Fix CBD Firmware Plugin"
+__plugin_name__ = "Fix Wait Firmware Plugin"
 __plugin_pythoncompat__ = ">=2.7,<4"  # python 2 and 3
 
 
 def __plugin_load__():
     global __plugin_implementation__
-    __plugin_implementation__ = FixCBDFirmwarePlugin()
+    __plugin_implementation__ = FixWaitFirmwarePlugin()
 
     global __plugin_hooks__
     __plugin_hooks__ = {

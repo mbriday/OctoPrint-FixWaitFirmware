@@ -4,21 +4,21 @@
 ### Do not forget to adjust the following variables to your own plugin.
 
 # The plugin's identifier, has to be unique
-plugin_identifier = "fixcbdfirmware"
+plugin_identifier = "fixwaitfirmware"
 
 # The plugin's python package, should be "octoprint_<plugin identifier>", has to be unique
-plugin_package = "octoprint_fixcbdfirmware"
+plugin_package = "octoprint_fixwaitfirmware"
 
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
-plugin_name = "OctoPrint-FixCBDFirmware"
+plugin_name = "OctoPrint-FixWaitFirmware"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.4.0"
+plugin_version = "0.1.0"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
-plugin_description = """Fixes communication with a broken firmware making its rounds that identifies as 'CBD make it'"""
+plugin_description = """Fixes communication with a broken firmware that sends 'wait' instead of 'busy' """
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
 plugin_author = "Gina Häußge"
@@ -27,7 +27,7 @@ plugin_author = "Gina Häußge"
 plugin_author_email = "gina@octoprint.org"
 
 # The plugin's homepage URL. Can be overwritten within OctoPrint's internal data via __plugin_url__ in the plugin module
-plugin_url = "https://github.com/OctoPrint/OctoPrint-FixCBDFirmware"
+plugin_url = "https://github.com/mbriday/OctoPrint-FixWaitFirmware"
 
 # The plugin's license. Can be overwritten within OctoPrint's internal data via __plugin_license__ in the plugin module
 plugin_license = "AGPLv3"
